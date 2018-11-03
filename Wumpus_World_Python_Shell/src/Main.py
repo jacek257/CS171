@@ -47,7 +47,7 @@ from World import World
 
 def main ( ):
     args = sys.argv
-    
+    print(args)
     if len(args) == 1:
         # Run on a random world and exit
         world = World()
@@ -64,6 +64,7 @@ def main ( ):
     worldFile  = ""
     outputFile = ""
     firstToken = args[1]
+    print(firstToken)
 
     # If there are options
     if firstToken[0] == '-':
