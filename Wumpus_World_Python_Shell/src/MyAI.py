@@ -29,7 +29,6 @@ class MyAI ( Agent ):
         self.curX = 0
         self.curY = 0
         self.preMoves = []
-        self.notSafe = set()
         self.visited = set()
         self.heardScream = False
         #0 = North, 1 = East, 2 = South, 3 = West
@@ -37,6 +36,9 @@ class MyAI ( Agent ):
         self.nextActions = deque()
         self.gotGold = False
         self.nextTurn = "left"
+        self.backs = 0
+        self.x_bound = 7
+        self.y_bound = 7
         pass
         # ======================================================================
         # YOUR CODE ENDS
@@ -46,25 +48,35 @@ class MyAI ( Agent ):
         # ======================================================================
         # YOUR CODE BEGINS
         # ======================================================================
-        if(len(self.nextActions) != 0):
-            return self.nextActions.popleft()
+        if(len(self.nextActions) != 0):        
+            action = self.nextActions.popleft()
+            if(action == "forward"):
+                self.moveForward()
+            return action
         
         if(self.curX == 0 and self.curY == 0):
             cordinate1 = str(self.curX+1) + ', ' + str(self.curY)
             cordinate2 = str(self.curX) + ', ' + str(self.curY+1)
             if(cordinate1 in self.visited and cordinate2 in self.visited):
                 return Agent.Action.CLIMB
+
+        if(scream):
+            self.heardScream = True
+            
+        if(self.heardScream):
+            stench = False
         
         if(breeze or stench):
             if(self.curX == 0 and self.curY == 0):
                 return Agent.Action.CLIMB
             else:
                 cordinate = str(self.curX) + ', ' + str(self.curY)
-                self.notSafe.add(cordinate)
+                self.visited.add(cordinate)
                 self.turnAround()
                 self.preMoves.pop()
                 self.nextActions.append(Agent.Action.FORWARD)
-                self.nextTurn = "right"
+#                self.nextTurn = "right"
+                self.back += 1
         elif(glitter and not self.gotGold):
             self.preMoves.append("grab")
             return Agent.Action.GRAB
@@ -81,21 +93,16 @@ class MyAI ( Agent ):
             elif(preMove == "right"):
                 self.nextActions.append(Agent.Action.TURN_LEFT)
         else:
-            self.nextActions.append(Agent.Action.FORWARD)
-            self.preMoves.append("forward")
-            self.move()
+            self.makeMove()
         
-        
-        if(scream):
-            self.heardScream = True
-            
-        if(self.heardScream):
-            stench = False
+
             
         
         
-        
-        return self.nextActions.popleft()
+        action = self.nextActions.popleft()
+        if(action == "forward")
+            self.moveForward()
+        return action
         # ======================================================================
         # YOUR CODE ENDS
         # ======================================================================
@@ -112,7 +119,7 @@ class MyAI ( Agent ):
         self.nextActions.append(Agent.Action.TURN_LEFT)
         pass
     
-    def move(self):
+    def moveForward(self):
         if(self.curDir == 0):
             self.curX += 1
         elif(self.curDir == 1):
@@ -121,6 +128,76 @@ class MyAI ( Agent ):
             self.curX -= 1
         if(self.curDir == 3):
             self.curY -= 1
+    
+    def checkVisited(self, x, y):
+        if(not self.checkInBounds(x, y)):
+                return False
+        cor = str(x) + ',' + str(y)
+        return cor in self.visited
+    
+    def checkInBounds(self, x, y):
+        if((x<0) or (x>=7) or (y<0) or (y>=7)):
+            return False
+        return True
+    
+    def makeMove():
+        if(self.curDir == 0):
+            if(not self.checkVisited(self.curX, self.curY+1)):
+                self.nextActions.append(Agent.Action.FORWARD)
+                self.preMoves.append("forward")
+            elif(not self.checkVisited(self.curX+1, self.curY)):
+                self.nextActions.append(Agent.Action.TURN_RIGHT)
+                self.preMoves.append("right")
+                self.nextActions.append(Agent.Action.FORWARD)
+                self.preMoves.append("forward")
+            elif(not self.checkVisited(self.curX-1, self.curY)):
+                self.nextActions.append(Agent.Action.TURN_LEFT)
+                self.preMoves.append("left")
+                self.nextActions.append(Agent.Action.FORWARD)
+                self.preMoves.append("forward")
+        elif(self.curDir == 1):
+            if(not self.checkVisited(self.curX+1, self.curY)):
+                self.nextActions.append(Agent.Action.FORWARD)
+                self.preMoves.append("forward")
+            elif(not self.checkVisited(self.curX, self.curY-1)):
+                self.nextActions.append(Agent.Action.TURN_RIGHT)
+                self.preMoves.append("right")
+                self.nextActions.append(Agent.Action.FORWARD)
+                self.preMoves.append("forward")
+            elif(not self.checkVisited(self.curX, self.curY+1)):
+                self.nextActions.append(Agent.Action.TURN_LEFT)
+                self.preMoves.append("left")
+                self.nextActions.append(Agent.Action.FORWARD)
+                self.preMoves.append("forward")
+        elif(self.curDir == 2):
+            if(not self.checkVisited(self.curX, self.curY-1)):
+                self.nextActions.append(Agent.Action.FORWARD)
+                self.preMoves.append("forward")
+            elif(not self.checkVisited(self.curX-1, self.curY)):
+                self.nextActions.append(Agent.Action.TURN_RIGHT)
+                self.preMoves.append("right")
+                self.nextActions.append(Agent.Action.FORWARD)
+                self.preMoves.append("forward")
+            elif(not self.checkVisited(self.curX+1, self.curY)):
+                self.nextActions.append(Agent.Action.TURN_LEFT)
+                self.preMoves.append("left")
+                self.nextActions.append(Agent.Action.FORWARD)
+                self.preMoves.append("forward")
+        elif(self.curDir == 3):
+            if(not self.checkVisited(self.curX-1, self.curY)):
+                self.nextActions.append(Agent.Action.FORWARD)
+                self.preMoves.append("forward")
+            elif(not self.checkVisited(self.curX, self.curY+1)):
+                self.nextActions.append(Agent.Action.TURN_RIGHT)
+                self.preMoves.append("right")
+                self.nextActions.append(Agent.Action.FORWARD)
+                self.preMoves.append("forward")
+            elif(not self.checkVisited(self.curX, self.curY-1)):
+                self.nextActions.append(Agent.Action.TURN_LEFT)
+                self.preMoves.append("left")
+                self.nextActions.append(Agent.Action.FORWARD)
+                self.preMoves.append("forward")
+        
     # ======================================================================
     # YOUR CODE ENDS
     # ======================================================================
