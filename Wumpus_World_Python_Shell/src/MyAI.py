@@ -38,7 +38,8 @@ class MyAI ( Agent ):
         self.x_bound = 7
         self.y_bound = 7
         self.backing = False
-        self.turnArounds = 0
+        self.turns = 0
+        self.firstTurn = "left"
         pass
         # ======================================================================
         # YOUR CODE ENDS
@@ -132,7 +133,6 @@ class MyAI ( Agent ):
     # ======================================================================
 
     def turnAround(self):
-        self.turnArounds += 1
         self.curDir -= 2
         self.keepDirBound()
         self.nextActions.append(Agent.Action.TURN_LEFT)
@@ -170,25 +170,33 @@ class MyAI ( Agent ):
     def backtrack(self):
         self.backing = True
         preMove = self.preMoves.pop()
+        for move in self.preMoves:
+            if(move == "left" or move == "right"):
+                self.firstTurn = move
         if(preMove == "grab"):
             self.turnAround()
         elif(preMove == "forward"):
             self.nextActions.append(Agent.Action.FORWARD)
-        elif(self.turnArounds % 2):
+        elif(self.firstTurn == "right" and self.turns == 2):
             if(preMove == "left"):
-                self.turnRight()
-            elif(preMove == "right"):
+                self.turns -= 1
                 self.turnLeft()
+            elif(preMove == "right"):
+                self.turns -= 1
+                self.turnRight()
         else:
             if(preMove == "left"):
-                self.turnLeft()
-            elif(preMove == "right"):
+                self.turns -= 1
                 self.turnRight()
+            elif(preMove == "right"):
+                self.turns -= 1
+                self.turnLeft()
         
     def turnRight(self):
         self.nextActions.append(Agent.Action.TURN_RIGHT)
         self.curDir += 1
         self.keepDirBound()
+        self.turns += 1
         
     def moveRight(self):
         self.turnRight()
@@ -201,6 +209,7 @@ class MyAI ( Agent ):
         self.nextActions.append(Agent.Action.TURN_LEFT)
         self.curDir -= 1
         self.keepDirBound()
+        self.turns += 1
         
     def moveLeft(self):
         self.turnLeft()
