@@ -38,6 +38,7 @@ class MyAI ( Agent ):
         self.x_bound = 7
         self.y_bound = 7
         self.backing = False
+        self.backingPaused = False
         self.turns = 0
         self.firstTurn = "left"
         pass
@@ -49,28 +50,33 @@ class MyAI ( Agent ):
         # ======================================================================
         # YOUR CODE BEGINS
         # ======================================================================
-        
+#        print()
+#        print()
         cordinate = str(self.curX) + ', ' + str(self.curY)
         self.visited.add(cordinate)
         
+        if(self.curX == 0 and self.curY == 0):
+            up = str(self.curX+1) + ', ' + str(self.curY)
+            right = str(self.curX) + ', ' + str(self.curY+1)
+            if(up in self.visited and right in self.visited):
+                return Agent.Action.CLIMB
+        
         if(len(self.nextActions) != 0):
             action = self.nextActions.popleft()
-            print("backing = {}".format(self.backing))
-            print("current action = {}".format(action))
-            print("curDir: {}".format(self.curDir))
+#            print("backing = {}".format(self.backing))
+#            print("current action = {}".format(action))
+#            print("curDir: {}".format(self.curDir))
             if(action == Agent.Action.FORWARD):
                 self.moveForward()
-            print(self.curX, self.curY)
-            print("visited: {}".format(self.visited))
-            print("previous Moves: {}".format(self.preMoves))
-            print("next Moves: {}".format(self.nextActions))
+#            print(self.curX, self.curY)
+#            print("visited: {}".format(self.visited))
+#            print("previous Moves: {}".format(self.preMoves))
+#            print("next Moves: {}".format(self.nextActions))
+#            print("first turn {}".format(self.firstTurn))
+#            print("num of turns {}".format(self.turns))
+#            print("x-limit {}".format(self.x_bound))
+#            print("y-limit {}".format(self.y_bound))
             return action
-        
-        if(self.curX == 0 and self.curY == 0):
-            cordinate1 = str(self.curX+1) + ', ' + str(self.curY)
-            cordinate2 = str(self.curX) + ', ' + str(self.curY+1)
-            if(cordinate1 in self.visited and cordinate2 in self.visited):
-                return Agent.Action.CLIMB
 
         if(scream):
             self.heardScream = True
@@ -88,7 +94,7 @@ class MyAI ( Agent ):
             self.preMoves.pop()
             self.makeMove()
         elif(glitter and self.notHaveGold):
-            print("******** Gold Grabbed ****************")
+#            print("******** Gold Grabbed ****************")
             self.notHaveGold = False
             self.preMoves.append("grab")
             return Agent.Action.GRAB
@@ -105,6 +111,7 @@ class MyAI ( Agent ):
                 self.turnAround()
                 self.preMoves.append("left")
                 self.preMoves.append("left")
+                self.turns += 2
                 self.nextActions.append(Agent.Action.FORWARD)
                 self.preMoves.append("forward")
         else:
@@ -114,15 +121,19 @@ class MyAI ( Agent ):
         
         
         action = self.nextActions.popleft()
-        print("backing = {}".format(self.backing))
-        print("current action = {}".format(action))
-        print("curDir: {}".format(self.curDir))
+#        print("backing = {}".format(self.backing))
+#        print("current action = {}".format(action))
+ #       print("curDir: {}".format(self.curDir))
         if(action == Agent.Action.FORWARD):
             self.moveForward()
-        print(self.curX, self.curY)
-        print("visited: {}".format(self.visited))
-        print("previous Moves: {}".format(self.preMoves))
-        print("next Moves: {}".format(self.nextActions))
+#        print(self.curX, self.curY)
+#        print("visited: {}".format(self.visited))
+#        print("previous Moves: {}".format(self.preMoves))
+#        print("next Moves: {}".format(self.nextActions))
+#        print("first turn {}".format(self.firstTurn))
+#        print("num of turns {}".format(self.turns))
+#        print("x-limit {}".format(self.x_bound))
+#        print("y-limit {}".format(self.y_bound))
         return action
         # ======================================================================
         # YOUR CODE ENDS
@@ -150,14 +161,15 @@ class MyAI ( Agent ):
             self.curX -= 1
     
     def checkVisited(self, x, y):
-        if(not self.checkInBounds(x, y)):
-                return True
         cor = str(x) + ', ' + str(y)
-        print("{} in visited = {}".format(cor, cor in self.visited))
+        if(not self.checkInBounds(x, y)):
+#            print("{} not in bounds".format(cor))
+            return True
+#        print("{} in visited = {}".format(cor, cor in self.visited))
         return cor in self.visited
     
     def checkInBounds(self, x, y):
-        if((x<0) or (x>self.x_bound) or (y<0) or (y>self.y_bound)):
+        if((x<0) or (x>self.x_bound-1) or (y<0) or (y>self.y_bound-1)):
             return False
         return True
     
@@ -170,78 +182,100 @@ class MyAI ( Agent ):
     def backtrack(self):
         self.backing = True
         preMove = self.preMoves.pop()
-        for move in self.preMoves:
-            if(move == "left" or move == "right"):
-                self.firstTurn = move
-        if(preMove == "grab"):
+        if(preMove == "pause"):
+            preMove = self.preMoves.pop()
+            if(preMove == "right"):
+                    if(self.preMoves[-1] == "pause"):
+                        self.turnLeft()
+                        self.preMoves.pop()
+                    else:
+                        self.turnRight()
+            elif(preMove == "left"):
+                    if(self.preMoves[-1] == "pause"):
+                        self.turnRight()
+                        self.preMoves.pop()
+                    else:
+                        self.turnLeft()
+            elif(preMove == "forward"):
+                self.nextActions.append(Agent.Action.FORWARD)
+        elif(preMove == "grab"):
             self.turnAround()
         elif(preMove == "forward"):
             self.nextActions.append(Agent.Action.FORWARD)
-        elif(self.firstTurn == "right" and self.turns == 2):
-            if(preMove == "left"):
-                self.turns -= 1
-                self.turnLeft()
-            elif(preMove == "right"):
-                self.turns -= 1
+        elif(preMove == "right"):
+            if(self.preMoves[-1] == "pause"):
                 self.turnRight()
-        else:
-            if(preMove == "left"):
-                self.turns -= 1
-                self.turnRight()
-            elif(preMove == "right"):
-                self.turns -= 1
+                self.preMoves.pop()
+            else:
                 self.turnLeft()
+        elif(preMove == "left"):
+            if(self.preMoves[-1] == "pause"):
+                self.turnLeft()
+                self.preMoves.pop()
+            else:
+                self.turnRight()
         
     def turnRight(self):
         self.nextActions.append(Agent.Action.TURN_RIGHT)
         self.curDir += 1
         self.keepDirBound()
-        self.turns += 1
         
     def moveRight(self):
         self.turnRight()
         self.preMoves.append("right")
+        self.turns += 1
         self.nextActions.append(Agent.Action.FORWARD)
         self.preMoves.append("forward")
-        
     
     def turnLeft(self):
         self.nextActions.append(Agent.Action.TURN_LEFT)
         self.curDir -= 1
         self.keepDirBound()
-        self.turns += 1
         
     def moveLeft(self):
         self.turnLeft()
         self.preMoves.append("left")
+        self.turns += 1
         self.nextActions.append(Agent.Action.FORWARD)
         self.preMoves.append("forward")
     
     def makeMove(self):
         if(self.curDir == 0):
             if(not self.checkVisited(self.curX, self.curY+1)):
+                if(self.backing):
+                    self.preMoves.append("pause")
                 self.backing = False
                 self.nextActions.append(Agent.Action.FORWARD)
                 self.preMoves.append("forward")
-            elif(not self.checkVisited(self.curX+1, self.curY)):
-                self.backing = False
-                self.moveRight()
             elif(not self.checkVisited(self.curX-1, self.curY)):
+                if(self.backing):
+                    self.preMoves.append("pause")
                 self.backing = False
                 self.moveLeft()
+            elif(not self.checkVisited(self.curX+1, self.curY)):
+                if(self.backing):
+                    self.preMoves.append("pause")
+                self.backing = False
+                self.moveRight()
             else:
                 if(not self.backing):
                     self.turnAround()
                 self.backtrack()
         elif(self.curDir == 1):
             if(not self.checkVisited(self.curX+1, self.curY)):
+                if(self.backing):
+                    self.preMoves.append("pause")
                 self.backing = False
                 self.nextActions.append(Agent.Action.FORWARD)
                 self.preMoves.append("forward")
             elif(not self.checkVisited(self.curX, self.curY-1)):
+                if(self.backing):
+                    self.preMoves.append("pause")
                 self.backing = False
                 self.moveRight()
             elif(not self.checkVisited(self.curX, self.curY+1)):
+                if(self.backing):
+                    self.preMoves.append("pause")
                 self.backing = False
                 self.moveLeft()
             else:
@@ -250,13 +284,19 @@ class MyAI ( Agent ):
                 self.backtrack()
         elif(self.curDir == 2):
             if(not self.checkVisited(self.curX, self.curY-1)):
+                if(self.backing):
+                    self.preMoves.append("pause")
                 self.backing = False
                 self.nextActions.append(Agent.Action.FORWARD)
                 self.preMoves.append("forward")
             elif(not self.checkVisited(self.curX-1, self.curY)):
+                if(self.backing):
+                    self.preMoves.append("pause")
                 self.backing = False
                 self.moveRight()
             elif(not self.checkVisited(self.curX+1, self.curY)):
+                if(self.backing):
+                    self.preMoves.append("pause")
                 self.backing = False
                 self.moveLeft()
             else:
@@ -265,13 +305,19 @@ class MyAI ( Agent ):
                 self.backtrack()
         elif(self.curDir == 3):
             if(not self.checkVisited(self.curX-1, self.curY)):
+                if(self.backing):
+                    self.preMoves.append("pause")
                 self.backing = False
                 self.nextActions.append(Agent.Action.FORWARD)
                 self.preMoves.append("forward")
             elif(not self.checkVisited(self.curX, self.curY+1)):
+                if(self.backing):
+                    self.preMoves.append("pause")
                 self.backing = False
                 self.moveRight()
             elif(not self.checkVisited(self.curX, self.curY-1)):
+                if(self.backing):
+                    self.preMoves.append("pause")
                 self.backing = False
                 self.moveLeft()
             else:
