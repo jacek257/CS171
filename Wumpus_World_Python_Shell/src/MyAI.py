@@ -315,7 +315,7 @@ class MyAI ( Agent ):
         #facing South       
         elif(self.curDir == 2):
             if(not self.checkVisited(self.curX, self.curY-1)):
-                self.South()
+                self.moveSouth()
                 self.preMoves.append('S')
             elif(not self.checkVisited(self.curX-1, self.curY)):
                 self.moveWest()
